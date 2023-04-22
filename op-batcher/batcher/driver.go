@@ -4,7 +4,8 @@ import (
 	"context"
 	"errors"
 	"fmt"
-	"io"
+	"github.com/ethereum/go-ethereum/common"
+"io"
 	"math/big"
 	_ "net/http/pprof"
 	"sync"
@@ -338,8 +339,7 @@ func (l *BatchSubmitter) publishStateToL1(ctx context.Context) {
 			break
 		}
 		// Record TX Status
-		// NOTE(norswap): heyyyy, it sends here!
-		if receipt, err := l.sendTransaction(ctx, txdata.data); err != nil {
+		if receipt, err := l.sendTransaction(ctx, txdata); err != nil {
 			l.recordFailedTx(txdata.id, err)
 		} else {
 			l.recordConfirmedTx(txdata.id, receipt)
@@ -350,23 +350,53 @@ func (l *BatchSubmitter) publishStateToL1(ctx context.Context) {
 // sendTransaction creates & submits a transaction to the batch inbox address with the given `data`.
 // It currently uses the underlying `txmgr` to handle transaction sending & price management.
 // This is a blocking method. It should not be called concurrently.
-func (l *BatchSubmitter) sendTransaction(ctx context.Context, data []byte) (*types.Receipt, error) {
+func (l *BatchSubmitter) sendTransaction(ctx context.Context, data plainTxData) (*types.Receipt, error) {
+
+	// TODO(norswap): create new data so that it includes a call to the solidity function with
+	// signature function propose(uint32 chainID, uint256 blockNumber, bytes32 blockHash, bytes
+	// calldata /* block */), where the calldata is the old data.
+
+	// ABI encoding for:
+	// propose(uint32 chainID, uint256 blockNumber, bytes32 blockHash, bytes calldata block)
+
+	// NOTE(norswap): we could use"github.com/ethereum/go-ethereum/accounts/abi" but this is easier
+
+	// encode selector for propose: 0x74123bf9
+	selector := []byte{0x74, 0x12, 0x3b, 0xf9}
+
+	blockNumber := make([]byte, 32)
+    data.id.FillBytes(blockNumber)
+	blockHash := data.blockHash.Bytes() // length 32
+	padding := make([]byte, len(data.data) % 32)
+
+	calldata := append(selector, blockNumber...)
+	calldata  = append(calldata, blockHash...)
+	calldata  = append(calldata, data.data...)
+	calldata  = append(calldata, padding...)
+
 	// Do the gas estimation offline. A value of 0 will cause the [txmgr] to estimate the gas limit.
-	intrinsicGas, err := core.IntrinsicGas(data, nil, false, true, true, false)
+	intrinsicGas, err := core.IntrinsicGas(calldata, nil, false, true, true, false)
 	if err != nil {
 		return nil, fmt.Errorf("failed to calculate intrinsic gas: %w", err)
 	}
 
+	// NOTE(norswap): Constant estimated via a Foundry script with "hello world" calldata.
+	// This estimate obviously does not include the 21k base gas (accounted for in intrinsic gas).
+	gasLimit := intrinsicGas + 5750
+
+	// TODO(norswap): obvious hack for config value
+	dataStreamAddress := common.HexToAddress("0x99bbA657f2BbC93c02D617f8bA121cB8Fc104Acf")
+
 	// Send the transaction through the txmgr
 	if receipt, err := l.txMgr.Send(ctx, txmgr.TxCandidate{
-		To:       &l.Rollup.BatchInboxAddress,
-		TxData:   data,
-		GasLimit: intrinsicGas,
+		To:       &dataStreamAddress,
+		TxData:   calldata,
+		GasLimit: gasLimit,
 	}); err != nil {
-		l.log.Warn("unable to publish tx", "err", err, "data_size", len(data))
+		l.log.Warn("unable to publish tx", "err", err, "data_size", len(calldata))
 		return nil, err
 	} else {
-		l.log.Info("tx successfully published", "tx_hash", receipt.TxHash, "data_size", len(data))
+		l.log.Info("tx successfully published", "tx_hash", receipt.TxHash, "data_size", len(calldata))
 		return receipt, nil
 	}
 }
@@ -379,12 +409,12 @@ func (l *BatchSubmitter) recordL1Tip(l1tip eth.L1BlockRef) {
 	l.metr.RecordLatestL1Block(l1tip)
 }
 
-func (l *BatchSubmitter) recordFailedTx(id uint64, err error) {
+func (l *BatchSubmitter) recordFailedTx(id big.Int, err error) {
 	l.log.Warn("Failed to send transaction", "err", err)
 	l.state.TxFailed(id)
 }
 
-func (l *BatchSubmitter) recordConfirmedTx(id uint64, receipt *types.Receipt) {
+func (l *BatchSubmitter) recordConfirmedTx(id big.Int, receipt *types.Receipt) {
 	l.log.Info("Transaction confirmed", "tx_hash", receipt.TxHash, "status", receipt.Status, "block_hash", receipt.BlockHash, "block_number", receipt.BlockNumber)
 	l1block := eth.BlockID{Number: receipt.BlockNumber.Uint64(), Hash: receipt.BlockHash}
 	l.state.TxConfirmed(id, l1block)

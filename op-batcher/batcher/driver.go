@@ -39,7 +39,8 @@ type BatchSubmitter struct {
 	lastStoredBlock eth.BlockID
 	lastL1Tip       eth.L1BlockRef
 
-	state *channelManager
+	// NOTE(norswap) changed
+	state *plainBlockdataManager
 }
 
 // NewBatchSubmitterFromCLIConfig initializes the BatchSubmitter, gathering any resources
@@ -118,7 +119,7 @@ func NewBatchSubmitter(ctx context.Context, cfg Config, l log.Logger, m metrics.
 	return &BatchSubmitter{
 		Config: cfg,
 		txMgr:  cfg.TxManager,
-		state:  NewChannelManager(l, m, cfg.Channel),
+		state:  newPlainBlockdataManager(l),
 	}, nil
 
 }
@@ -230,6 +231,7 @@ func (l *BatchSubmitter) loadBlockIntoState(ctx context.Context, blockNumber uin
 		return nil, fmt.Errorf("getting L2 block: %w", err)
 	}
 
+	// NOTE(norswap): calling into new code
 	if err := l.state.AddL2Block(block); err != nil {
 		return nil, fmt.Errorf("adding L2 block to state: %w", err)
 	}
@@ -290,6 +292,7 @@ func (l *BatchSubmitter) loop() {
 		select {
 		case <-ticker.C:
 			l.loadBlocksIntoState(l.shutdownCtx)
+			// TODO(norswap): modify this to hit the contracts instead of the EOA
 			l.publishStateToL1(l.killCtx)
 		case <-l.shutdownCtx.Done():
 			l.publishStateToL1(l.killCtx)
@@ -335,10 +338,11 @@ func (l *BatchSubmitter) publishStateToL1(ctx context.Context) {
 			break
 		}
 		// Record TX Status
-		if receipt, err := l.sendTransaction(ctx, txdata.Bytes()); err != nil {
-			l.recordFailedTx(txdata.ID(), err)
+		// NOTE(norswap): heyyyy, it sends here!
+		if receipt, err := l.sendTransaction(ctx, txdata.data); err != nil {
+			l.recordFailedTx(txdata.id, err)
 		} else {
-			l.recordConfirmedTx(txdata.ID(), receipt)
+			l.recordConfirmedTx(txdata.id, receipt)
 		}
 	}
 }
@@ -375,12 +379,12 @@ func (l *BatchSubmitter) recordL1Tip(l1tip eth.L1BlockRef) {
 	l.metr.RecordLatestL1Block(l1tip)
 }
 
-func (l *BatchSubmitter) recordFailedTx(id txID, err error) {
+func (l *BatchSubmitter) recordFailedTx(id uint64, err error) {
 	l.log.Warn("Failed to send transaction", "err", err)
 	l.state.TxFailed(id)
 }
 
-func (l *BatchSubmitter) recordConfirmedTx(id txID, receipt *types.Receipt) {
+func (l *BatchSubmitter) recordConfirmedTx(id uint64, receipt *types.Receipt) {
 	l.log.Info("Transaction confirmed", "tx_hash", receipt.TxHash, "status", receipt.Status, "block_hash", receipt.BlockHash, "block_number", receipt.BlockNumber)
 	l1block := eth.BlockID{Number: receipt.BlockNumber.Uint64(), Hash: receipt.BlockHash}
 	l.state.TxConfirmed(id, l1block)

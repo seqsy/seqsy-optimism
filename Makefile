@@ -93,6 +93,11 @@ test-unit:
 	yarn test
 .PHONY: test-unit
 
+test-seqsy:
+	make -C ./op-node test
+	make -C ./op-batcher test
+.PHONY: test-seqsy
+
 test-integration:
 	bash ./ops-bedrock/test-integration.sh \
 		./packages/contracts-bedrock/deployments/devnetL1

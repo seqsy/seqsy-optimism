@@ -108,8 +108,10 @@ func (ds *DataSource) Next(ctx context.Context) (eth.Data, error) {
 func DataFromEVMTransactions(config *rollup.Config, batcherAddr common.Address, txs types.Transactions, log log.Logger) []eth.Data {
 	var out []eth.Data
 	l1Signer := config.L1Signer()
+	// TODO(norswap): obvious hack for config value
+    dataStreamAddress := common.HexToAddress("0x99bbA657f2BbC93c02D617f8bA121cB8Fc104Acf")
 	for j, tx := range txs {
-		if to := tx.To(); to != nil && *to == config.BatchInboxAddress {
+		if to := tx.To(); to != nil && *to == dataStreamAddress {
 			_, err := l1Signer.Sender(tx) // optimization: only derive sender if To is correct
 			// seqDataSubmitter, err := l1Signer.Sender(tx) // optimization: only derive sender if To is correct
 			if err != nil {

@@ -22,6 +22,7 @@ import (
 
 	"github.com/ethereum-optimism/optimism/op-node/eth"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
+	"github.com/ethereum-optimism/optimism/op-node/crypto/bls"
 )
 
 const (
@@ -61,6 +62,7 @@ type GossipSetupConfigurables interface {
 
 type GossipRuntimeConfig interface {
 	P2PSequencerAddress() common.Address
+	bls     *bls.BlsKeyPair
 }
 
 //go:generate mockery --name GossipMetricer
@@ -88,6 +90,7 @@ var msgBufPool = sync.Pool{New: func() any {
 
 // BuildMsgIdFn builds a generic message ID function for gossipsub that can handle compressed payloads,
 // mirroring the eth2 p2p gossip spec.
+// @AFK this is where the message is built/bubble back up to the function
 func BuildMsgIdFn(cfg *rollup.Config) pubsub.MsgIdFunction {
 	return func(pmsg *pb.Message) string {
 		valid := false
@@ -340,6 +343,7 @@ func BuildBlocksValidator(log log.Logger, cfg *rollup.Config, runCfg GossipRunti
 	}
 }
 
+// @AFK note that we want this to change to a multisig bls
 func verifyBlockSignature(log log.Logger, cfg *rollup.Config, runCfg GossipRuntimeConfig, id peer.ID, signatureBytes []byte, payloadBytes []byte) pubsub.ValidationResult {
 	signingHash, err := BlockSigningHash(cfg, payloadBytes)
 	if err != nil {
@@ -427,6 +431,7 @@ func (p *publisher) Close() error {
 	return p.blocksTopic.Close()
 }
 
+// @AFK in this function we want to register in the new contracts, this means adding bindings to this package
 func JoinGossip(p2pCtx context.Context, self peer.ID, topicScoreParams *pubsub.TopicScoreParams, ps *pubsub.PubSub, log log.Logger, cfg *rollup.Config, runCfg GossipRuntimeConfig, gossipIn GossipIn) (GossipOut, error) {
 	val := guardGossipValidator(log, logValidationResult(self, "validated block", log, BuildBlocksValidator(log, cfg, runCfg)))
 	blocksTopicName := blocksTopicV1(cfg)

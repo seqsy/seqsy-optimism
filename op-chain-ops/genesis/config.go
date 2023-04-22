@@ -38,7 +38,7 @@ type DeployConfig struct {
 	MaxSequencerDrift         uint64         `json:"maxSequencerDrift"`
 	SequencerWindowSize       uint64         `json:"sequencerWindowSize"`
 	ChannelTimeout            uint64         `json:"channelTimeout"`
-	P2PSequencerAddress       common.Address `json:"p2pSequencerAddress"`
+	P2PSequencerAddress       common.Address `json:"p2pSequencerAddress"` // @AFK remove this, each "sequencer" has their own address they publish blocks with
 	BatchInboxAddress         common.Address `json:"batchInboxAddress"`
 	BatchSenderAddress        common.Address `json:"batchSenderAddress"`
 

@@ -1,5 +1,6 @@
 package proposer
 
+// @AFK MODIFY PROPOSER TO SIGN
 import (
 	"context"
 	"crypto/ecdsa"

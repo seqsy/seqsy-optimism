@@ -90,6 +90,7 @@ func (s *APIBackend) Self(ctx context.Context) (*PeerInfo, error) {
 	return info, nil
 }
 
+// we replace the Keccak256Hash with our bls publicKey
 func dumpPeer(id peer.ID, nw network.Network, pstore peerstore.Peerstore, connMgr connmgr.ConnManager) (*PeerInfo, error) {
 	info := &PeerInfo{
 		PeerID: id,

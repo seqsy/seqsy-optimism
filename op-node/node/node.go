@@ -47,6 +47,7 @@ type OpNode struct {
 }
 
 // The OpNode handles incoming gossip
+// @AFK NOTE p2p gossip to know it's your turn????
 var _ p2p.GossipIn = (*OpNode)(nil)
 
 func New(ctx context.Context, cfg *Config, log log.Logger, snapshotLog log.Logger, appVersion string, m *metrics.Metrics) (*OpNode, error) {

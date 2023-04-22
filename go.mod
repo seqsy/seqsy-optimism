@@ -21,7 +21,7 @@ require (
 	github.com/holiman/uint256 v1.2.0
 	github.com/ipfs/go-datastore v0.6.0
 	github.com/ipfs/go-ds-leveldb v0.5.0
-	//github.com/libp2p/go-libp2p v0.25.1
+	github.com/libp2p/go-libp2p v0.25.1
 	github.com/libp2p/go-libp2p-pubsub v0.9.0
 	github.com/libp2p/go-libp2p-testing v0.12.0
 	github.com/mattn/go-isatty v0.0.17
@@ -63,7 +63,6 @@ require (
 	github.com/deckarep/golang-set/v2 v2.1.0 // indirect
 	github.com/decred/dcrd/crypto/blake256 v1.0.1 // indirect
 	github.com/deepmap/oapi-codegen v1.8.2 // indirect
-	github.com/dfinity-side-projects/go-dfinity-crypto v0.0.0-20170719220532-1db358303499 // indirect
 	github.com/docker/distribution v2.8.1+incompatible // indirect
 	github.com/docker/go-units v0.5.0 // indirect
 	github.com/edsrzf/mmap-go v1.1.0 // indirect
@@ -152,7 +151,6 @@ require (
 	github.com/prometheus/common v0.42.0 // indirect
 	github.com/prometheus/procfs v0.9.0 // indirect
 	github.com/quic-go/qpack v0.4.0 // indirect
-	github.com/quic-go/qtls-go1-18 v0.2.0 // indirect
 	github.com/quic-go/qtls-go1-19 v0.3.2 // indirect
 	github.com/quic-go/qtls-go1-20 v0.2.2 // indirect
 	github.com/quic-go/quic-go v0.34.0 // indirect
@@ -196,8 +194,4 @@ require (
 
 replace github.com/ethereum/go-ethereum v1.11.5 => github.com/ethereum-optimism/op-geth v1.101105.1-0.20230420183214-24ae687be390
 
-//replace github.com/libp2p/go-libp2p v0.15.1 => github.com/seqsy/go-libp2p v0.0.0-20230422142001-7fc7f0358e4e
-
-//replace github.com/ethereum/go-ethereum v1.11.5 => ../go-ethereum
-
-replace github.com/libp2p/go-libp2p => github.com/seqsy/go-libp2p v0.0.0-20230422142001-7fc7f0358e4e
+replace github.com/libp2p/go-libp2p v0.15.1 => github.com/seqsy/go-libp2p v0.0.0-20230422142001-7fc7f0358e4e

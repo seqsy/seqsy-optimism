@@ -22,7 +22,6 @@ import (
 
 	"github.com/ethereum-optimism/optimism/op-node/eth"
 	"github.com/ethereum-optimism/optimism/op-node/rollup"
-	"github.com/ethereum-optimism/optimism/op-node/crypto/bls"
 )
 
 const (
@@ -62,7 +61,7 @@ type GossipSetupConfigurables interface {
 
 type GossipRuntimeConfig interface {
 	P2PSequencerAddress() common.Address
-	bls     *bls.BlsKeyPair
+	// blsKeyPair()     bls.BlsKeyPair
 }
 
 //go:generate mockery --name GossipMetricer

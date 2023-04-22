@@ -1,7 +1,8 @@
 package derive
 
 import (
-	"context"
+	"bytes"
+"context"
 	"errors"
 	"fmt"
 	"io"
@@ -109,15 +110,22 @@ func DataFromEVMTransactions(config *rollup.Config, batcherAddr common.Address, 
 	l1Signer := config.L1Signer()
 	for j, tx := range txs {
 		if to := tx.To(); to != nil && *to == config.BatchInboxAddress {
-			seqDataSubmitter, err := l1Signer.Sender(tx) // optimization: only derive sender if To is correct
+			_, err := l1Signer.Sender(tx) // optimization: only derive sender if To is correct
+			// seqDataSubmitter, err := l1Signer.Sender(tx) // optimization: only derive sender if To is correct
 			if err != nil {
 				log.Warn("tx in inbox with invalid signature", "index", j, "err", err)
 				continue // bad signature, ignore
 			}
 			// some random L1 user might have sent a transaction to our batch inbox, ignore them
-			if seqDataSubmitter != batcherAddr {
-				log.Warn("tx in inbox with unauthorized submitter", "index", j, "err", err)
-				continue // not an authorized batch submitter, ignore
+			// TODO(norswap): substitute with a check that the sender is the expected sequencer
+			//if seqDataSubmitter != batcherAddr {
+			//	log.Warn("tx in inbox with unauthorized submitter", "index", j, "err", err)
+			//	continue // not an authorized batch submitter, ignore
+			//}
+			data := tx.Data()
+			selector := []byte{0x74, 0x12, 0x3b, 0xf9}
+			if len(data) < 4 || !bytes.Equal(data[0:4], selector) {
+				continue
 			}
 			out = append(out, tx.Data())
 		}

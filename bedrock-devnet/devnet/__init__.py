@@ -28,33 +28,33 @@ def main():
     contracts_bedrock_dir = pjoin(monorepo_dir, 'packages', 'contracts-bedrock')
     deployment_dir = pjoin(contracts_bedrock_dir, 'deployments', 'devnetL1')
     op_node_dir = pjoin(args.monorepo_dir, 'op-node')
-    # genesis_l1_path = pjoin(devnet_dir, 'genesis-l1.json')
+    genesis_l1_path = pjoin(devnet_dir, 'genesis-l1.json')
     genesis_l2_path = pjoin(devnet_dir, 'genesis-l2.json')
     addresses_json_path = pjoin(devnet_dir, 'addresses.json')
     sdk_addresses_json_path = pjoin(devnet_dir, 'sdk-addresses.json')
     rollup_config_path = pjoin(devnet_dir, 'rollup.json')
     os.makedirs(devnet_dir, exist_ok=True)
 
-    # if os.path.exists(genesis_l1_path):
-    #     log.info('L2 genesis already generated.')
-    # else:
-    #     log.info('Generating L1 genesis.')
-    #     write_json(genesis_l1_path, GENESIS_TMPL)
+    if os.path.exists(genesis_l1_path):
+        log.info('L2 genesis already generated.')
+    else:
+        log.info('Generating L1 genesis.')
+        write_json(genesis_l1_path, GENESIS_TMPL)
 
-    # log.info('Starting L1.')
+    log.info('Starting L1.')
     # run_command(['docker-compose', 'up', '-d', 'l1'], cwd=ops_bedrock_dir, env={
     #     'PWD': ops_bedrock_dir
     # })
     # wait_up(8545)
 
-    # log.info('Generating network config.')
-    # devnet_cfg_orig = pjoin(contracts_bedrock_dir, 'deploy-config', 'devnetL1.json')
-    # devnet_cfg_backup = pjoin(devnet_dir, 'devnetL1.json.bak')
-    # shutil.copy(devnet_cfg_orig, devnet_cfg_backup)
-    # deploy_config = read_json(devnet_cfg_orig)
-    # deploy_config['l1GenesisBlockTimestamp'] = GENESIS_TMPL['timestamp']
-    # deploy_config['l1StartingBlockTag'] = 'earliest'
-    # write_json(devnet_cfg_orig, deploy_config)
+    log.info('Generating network config.')
+    devnet_cfg_orig = pjoin(contracts_bedrock_dir, 'deploy-config', 'devnetL1.json')
+    devnet_cfg_backup = pjoin(devnet_dir, 'devnetL1.json.bak')
+    shutil.copy(devnet_cfg_orig, devnet_cfg_backup)
+    deploy_config = read_json(devnet_cfg_orig)
+    deploy_config['l1GenesisBlockTimestamp'] = GENESIS_TMPL['timestamp']
+    deploy_config['l1StartingBlockTag'] = 'earliest'
+    write_json(devnet_cfg_orig, deploy_config)
 
     if os.path.exists(addresses_json_path):
         log.info('Contracts already deployed.')

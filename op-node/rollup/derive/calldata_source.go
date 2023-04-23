@@ -112,6 +112,7 @@ func DataFromEVMTransactions(config *rollup.Config, batcherAddr common.Address, 
     dataStreamAddress := common.HexToAddress("0x99bbA657f2BbC93c02D617f8bA121cB8Fc104Acf")
 	for j, tx := range txs {
 		if to := tx.To(); to != nil && *to == dataStreamAddress {
+			log.Info("found data stream transaction", "index", j)
 			_, err := l1Signer.Sender(tx) // optimization: only derive sender if To is correct
 			// seqDataSubmitter, err := l1Signer.Sender(tx) // optimization: only derive sender if To is correct
 			if err != nil {
@@ -129,6 +130,7 @@ func DataFromEVMTransactions(config *rollup.Config, batcherAddr common.Address, 
 			if len(data) < 4 || !bytes.Equal(data[0:4], selector) {
 				continue
 			}
+			log.Info("found valid transaction", "index", j)
 			out = append(out, tx.Data())
 		}
 	}

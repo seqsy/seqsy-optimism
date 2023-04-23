@@ -33,10 +33,13 @@ func (bp *BatchProvider) NextBatch(ctx context.Context) (*BatchData, error) {
 		return nil, err
 	}
 
+	bp.log.Info("got batch data", "data", len(data))
+
 	// At minimum, select, block number and block hash need to be removed (4 + 32 + 32 = 68 bytes)
 	if (len(data) < 68) {
 		return nil, NotEnoughData
 	}
+	bp.log.Info("enough data")
 	read, err := BatchReader(bytes.NewBuffer(data[68:]), bp.Origin())
 	if err != nil {
         bp.log.Error("Error creating batch reader from batch data", "err", err)
@@ -46,6 +49,7 @@ func (bp *BatchProvider) NextBatch(ctx context.Context) (*BatchData, error) {
 		return nil, io.EOF
 	}
 
+	bp.log.Info("yup my friend")
 	batch, err := read()
     if err == io.EOF {
         return nil, NotEnoughData
@@ -53,6 +57,7 @@ func (bp *BatchProvider) NextBatch(ctx context.Context) (*BatchData, error) {
         bp.log.Warn("failed to read batch from data", "err", err)
         return nil, NotEnoughData
     }
+	bp.log.Info("we got batch", "epoch", batch.Batch.BatchV1.Epoch(), "num", batch.Batch.BatchV1.EpochNum)
     return batch.Batch, nil
 }
 

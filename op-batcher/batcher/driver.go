@@ -374,6 +374,8 @@ func (l *BatchSubmitter) sendTransaction(ctx context.Context, data plainTxData) 
 	calldata  = append(calldata, data.data...)
 	calldata  = append(calldata, padding...)
 
+	l.log.Info("submitting batch", "size", len(calldata), "block", data.id)
+
 	// Do the gas estimation offline. A value of 0 will cause the [txmgr] to estimate the gas limit.
 	intrinsicGas, err := core.IntrinsicGas(calldata, nil, false, true, true, false)
 	if err != nil {

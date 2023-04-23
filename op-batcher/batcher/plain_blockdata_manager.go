@@ -78,6 +78,8 @@ func (mgr *plainBlockdataManager) AddL2Block(block *types.Block) error {
         return fmt.Errorf("converting block to batch: %w", err)
     }
 
+	mgr.log.Info("adding L2 block", "number", block.Number(), "txs", block.Transactions().Len())
+
     var buf bytes.Buffer
     if err := rlp.Encode(&buf, batch); err != nil {
         return err

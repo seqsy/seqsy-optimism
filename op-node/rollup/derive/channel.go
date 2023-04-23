@@ -2,7 +2,6 @@ package derive
 
 import (
 	"bytes"
-	"compress/zlib"
 	"fmt"
 	"io"
 
@@ -145,12 +144,13 @@ func (ch *Channel) Reader() io.Reader {
 // BatchReader provides a function that iteratively consumes batches from the reader.
 // The L1Inclusion block is also provided at creation time.
 func BatchReader(r io.Reader, l1InclusionBlock eth.L1BlockRef) (func() (BatchWithL1InclusionBlock, error), error) {
+	// NOTE(norswap): compression no more
 	// Setup decompressor stage + RLP reader
-	zr, err := zlib.NewReader(r)
-	if err != nil {
-		return nil, err
-	}
-	rlpReader := rlp.NewStream(zr, MaxRLPBytesPerChannel)
+	//zr, err := zlib.NewReader(r)
+	//if err != nil {
+	//	return nil, err
+	//}
+	rlpReader := rlp.NewStream(r, MaxRLPBytesPerChannel)
 	// Read each batch iteratively
 	return func() (BatchWithL1InclusionBlock, error) {
 		ret := BatchWithL1InclusionBlock{

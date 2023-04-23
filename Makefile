@@ -96,6 +96,7 @@ test-unit:
 test-seqsy:
 	make -C ./op-node test
 	make -C ./op-batcher test
+	make -C ./op-seqsy test
 .PHONY: test-seqsy
 
 test-integration:
